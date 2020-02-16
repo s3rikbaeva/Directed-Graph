@@ -6,6 +6,7 @@ This Digraph class, that provide such functions as: Reverse and Topological sort
 package com.company;
 
 import java.io.*;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 
@@ -16,15 +17,14 @@ public class Digraph {
     public Digraph reverseGraph;
     public boolean[] marked;
     public Stack<Integer> postOrder;
-    public Stack<Integer> reverseOrder;
-
+    public boolean hasCycle = false;
+    public boolean[] onStack;
 
     public Digraph(int V) {
         this.V = V;
         adj = (Bag<Integer>[]) new Bag[V];
         for (int v = 0; v < V; v++) {
             adj[v] = new Bag<Integer>();
-
         }
     }
 
@@ -61,9 +61,7 @@ public class Digraph {
     }
 
     public int E() {
-
         return E;
-
     }
 
 
@@ -91,8 +89,9 @@ public class Digraph {
     }
 
 
-    public Stack<Integer> topologicalSort() {
+    public int[] topologicalSort() {
         Digraph digraph = new Digraph(V);
+        int[] newStack = new int[V];
         for(int i = 0 ;i< V; i++){
             for(int w : adj[i]){
                 digraph.addEdge(i, w);
@@ -100,26 +99,39 @@ public class Digraph {
         }
         postOrder = new Stack<Integer>();
         marked = new boolean[V];
+        onStack = new boolean[V];
         for(int i = 0 ; i< V; i++){
             if(!marked[i]){
-                //System.out.println(i);
                 dfs(digraph, i);
-
             }
         }
-        return postOrder;
+        if(hasCycle){
+            System.out.println("There is a cycle");
+        }
+        else{
+            for(int i = 0 ;i< V;  i++){
+                newStack[i] += (postOrder.pop());
+            }
+        }
+        return newStack;
     }
 
 
-    public void dfs(Digraph G , int v){
 
+    public void dfs(Digraph G , int v){
         marked[v] = true;
+        onStack[v] = true;
         for(int w: G.adj(v)){
+
+            if(onStack[w]){
+                hasCycle = true;
+            }
+
             if(!marked[w]) {
                 dfs(G, w);
             }
-
         }
+        onStack[v] = false;
         postOrder.push(v);
     }
 
@@ -131,12 +143,13 @@ public class Digraph {
         Digraph newGraph = G.reverse();
         System.out.println(newGraph.toString());
         System.out.println();
-        Stack<Integer> newStack = G.topologicalSort();
+        int[] newStack = G.topologicalSort();
         for(int i = 0 ; i< G.V; i++){
-            System.out.print(newStack.pop() + " ");
+            System.out.print(newStack[i] + " ");
         }
 
     }
 
 
 }
+
